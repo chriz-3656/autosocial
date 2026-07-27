@@ -29,4 +29,8 @@ async def check():
         print()
 
 if __name__ == "__main__":
-    asyncio.run(check())
+    try:
+        asyncio.run(check())
+    except KeyboardInterrupt:
+        import sys
+        sys.exit(130)
