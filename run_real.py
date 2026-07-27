@@ -113,4 +113,11 @@ async def main():
         print("\n--- Publishing Failed. Check logs. ---")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n\n" + f"{C_MAG}╭{'─'*56}╮{C_RST}")
+        print(f"{C_MAG}│{C_RST} {C_RED}🛑 AutoSocial AI Shutdown Safely{C_RST}{' '*22}{C_MAG}│{C_RST}")
+        print(f"{C_MAG}╰{'─'*56}╯{C_RST}\n")
+        import sys
+        sys.exit(0)
