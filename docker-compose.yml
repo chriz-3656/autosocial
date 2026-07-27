@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  autosocial:
+    build: .
+    container_name: autosocial_app
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src
+      - autosocial_data:/app/data
+    restart: unless-stopped
+    command: tail -f /dev/null # Replace with actual start command later
+
+volumes:
+  autosocial_data:

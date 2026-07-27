@@ -1,0 +1,87 @@
+Metadata-Version: 2.4
+Name: autosocial
+Version: 0.1.0
+Summary: AutoSocial AI: Autonomous AI-powered social media operating system
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: pydantic>=2.0
+Requires-Dist: pydantic-settings>=2.0
+Requires-Dist: instagrapi>=2.1.0
+Requires-Dist: python-dotenv>=1.0.0
+Requires-Dist: sqlalchemy>=2.0.0
+Requires-Dist: fastapi>=0.100.0
+Requires-Dist: uvicorn>=0.23.0
+Requires-Dist: playwright>=1.35.0
+Requires-Dist: jinja2>=3.1.2
+Requires-Dist: click>=8.1.0
+Requires-Dist: apscheduler>=3.10.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.21.0; extra == "dev"
+Requires-Dist: black>=23.0; extra == "dev"
+Requires-Dist: ruff>=0.1.0; extra == "dev"
+
+# AutoSocial AI
+
+AutoSocial AI is a lightweight, autonomous, AI-powered Instagram posting system designed for a single owner. 
+It operates as a modular monolith that researches, generates, schedules, and publishes content without human intervention.
+
+## Architecture & Workflow
+
+The architecture is built for simplicity, resilience, and strict separation of concerns. `instagrapi` is treated purely as an external dependency hidden behind the `PublisherInterface`. Business logic components never directly invoke the unofficial Instagram API.
+
+**Autonomous Workflow:**
+Research &rarr; Trend Detection &rarr; Memory Check &rarr; Generate Content &rarr; Generate Caption &rarr; Generate Hashtags &rarr; Recommend Music &rarr; Select Template &rarr; Render Graphic &rarr; Queue &rarr; Publish (via InstagrapiPublisher) &rarr; Collect Analytics &rarr; Store Memory &rarr; Optimize Future Posts
+
+## Module Structure
+
+```
+autosocial/
+├── src/autosocial/
+│   ├── analytics/        # Collects and stores post performance metrics
+│   ├── brain/            # Main orchestrator / state machine for the workflow
+│   ├── cleanup/          # Garbage collection for temporary rendered files/caches
+│   ├── content/          # Generators for Content, Captions, Hashtags, and Music
+│   ├── core/             # Configuration, Interfaces (e.g., PublisherInterface), Exceptions
+│   ├── dashboard/        # Lightweight UI for monitoring queue, calendar, and analytics
+│   ├── memory/           # Memory Engine to track past content and avoid duplicates
+│   ├── models/           # Shared Pydantic data models
+│   ├── publishers/       # Implementations of PublisherInterface (InstagrapiPublisher)
+│   ├── queue/            # Queue manager (Pending, Rendering, Publishing, Published, Failed, Retry)
+│   ├── renderers/        # HTML/CSS/Playwright engine for generating graphics from templates
+│   ├── research/         # Information gathering from RSS, blogs, and defined sources
+│   ├── scheduler/        # Task scheduling and posting window logic
+│   ├── trends/           # Trend detection and ranking
+│   └── utils/            # Logging and shared utilities
+```
+
+## Dependency Graph
+
+```mermaid
+graph TD
+    Scheduler --> Brain
+    Brain --> ResearchEngine
+    Brain --> TrendDetection
+    Brain --> MemoryEngine
+    Brain --> ContentGenerator
+    ContentGenerator --> CaptionGenerator
+    ContentGenerator --> HashtagGenerator
+    ContentGenerator --> MusicRecommendation
+    Brain --> HTMLRenderer
+    HTMLRenderer --> QueueManager
+    QueueManager --> InstagrapiPublisher
+    InstagrapiPublisher --> Instagrapi[instagrapi (Third Party)]
+    InstagrapiPublisher --> AnalyticsCollector
+    AnalyticsCollector --> MemoryEngine
+    QueueManager --> CleanupService
+```
+
+## Implementation Plan for Next Phase (Phase 3)
+
+1. **Memory & Content Generation**: Implement the `MemoryEngine` (SQLite/JSON store) and `ContentGenerator` utilizing a chosen LLM to create unique concepts.
+2. **HTML Renderer Core**: Build the baseline Playwright automation in `renderers` that takes an HTML/CSS template and outputs a `.png` or `.mp4`.
+3. **Queue Manager & Scheduler Skeleton**: Wire up a lightweight SQLite or Redis-based queue to transition posts between states (Pending &rarr; Rendering &rarr; Publishing &rarr; Published).
+4. **Brain Orchestrator**: Connect the pipeline from Research to the Queue.
+
+*Note: Enterprise features like RBAC, Multi-tenancy, and complex microservices have been strictly removed.*

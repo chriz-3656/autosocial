@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Editorial Dispatch — Instagram Template</title>
+
+<!--
+  ============================================================================
+  EDITORIAL DISPATCH — Instagram graphic design engine
+  ============================================================================
+
+  WHAT THIS IS
+  A single self-contained HTML file that renders a 1080×1080 editorial-style
+  Instagram graphic from two variables. It replaces the old fixed-layout
+  proof of concept with a token-driven design system: one visual identity
+  (ink + parchment + brass), three layout compositions, and a set of
+  reusable SVG components (masthead seal, corner registration marks,
+  hairline rules), all chosen and fitted automatically based on the content.
+
+  TEMPLATE VARIABLES (unchanged — safe to keep existing pipeline calls)
+    {{ concept }}   → the headline / concept text
+    {{ brand }}     → the @handle shown in the masthead and seal
+
+  Everything else (layout choice, eyebrow label, folio number, dateline,
+  seal rotation) is derived deterministically from those two strings, so
+  the same input always renders the same output — no new template
+  variables required, no pipeline changes needed beyond swapping the file.
+
+  LAYOUT SELECTION (intelligent, content-aware)
+    ≤ 26 characters   → "cover"    — huge centered type, maximal restraint
+    ≤ 90 characters   → "feature"  — asymmetric left-aligned headline
+    > 90 characters    → "dispatch" — running-text column with a drop cap
+  Font size within the chosen layout is then auto-fit at render time so
+  arbitrarily long/short concepts never clip or overflow the 1080×1080
+  frame — critical for a pipeline that feeds unpredictable copy in.
+
+  PLAYWRIGHT COMPATIBILITY
+    - Fixed 1080×1080 canvas, no responsive breakpoints to fight.
+    - No animation, transition, or timers — a screenshot at any moment
+      after ready is identical to one taken a second later.
+    - Layout selection + autofit + font loading all resolve before the
+      page signals readiness: `document.body.dataset.ready === "true"`
+      (and class `.is-ready`) is set only after `document.fonts.ready`
+      resolves AND the fit loop completes. If your Playwright step
+      currently just waits for `load`, consider waiting for
+      `body[data-ready="true"]` instead for zero font-swap risk.
+    - Fonts load from Google Fonts over the network. If your render
+      environment is offline/sandboxed, self-host the three families
+      referenced below and swap the <link> for local @font-face rules —
+      everything else (fallback stack, layout, autofit) keeps working
+      unchanged since system fonts are the declared fallback.
+    - No innerHTML is used anywhere on the {{ concept }} / {{ brand }}
+      strings — the drop-cap split and all dynamic text use textContent
+      and DOM node operations, so arbitrary/adversarial input can't
+      inject markup into the page.
+  ============================================================================
+-->
+
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,340;0,9..144,480;0,9..144,600;1,9..144,420&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=block" rel="stylesheet">
+
+<style>
+  /* ========================================================================
+     DESIGN TOKENS — the entire visual identity lives here. Retint the
+     whole system by editing this block only; every component below
+     consumes these custom properties instead of hardcoded values.
+     ======================================================================== */
+  :root{
+    /* color */
+    --ink-950: #0C0F13;
+    --ink-900: #14181E;
+    --ink-800: #1D222A;
+    --parchment: #EAE3D2;
+    --parchment-dim: #9C978C;
+    --brass: #C6A15B;
+    --brass-dim: #6E5C3B;
+    --teal: #4C6B60;
+
+    /* type */
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+
+    /* structure */
+    --stage: 1080px;
+    --gutter: 72px;
+    --rule: 1px;
+    --radius-seal: 50%;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html,body{
+    margin:0; padding:0;
+    background: var(--ink-950);
+  }
+
+  /* ========================================================================
+     STAGE — the fixed 1080×1080 canvas. Grid rows give the composition
+     area a real, measurable height (1fr) so JS autofit can compare
+     scrollHeight against an actual box instead of an estimate.
+     ======================================================================== */
+  .stage{
+    position: relative;
+    width: var(--stage);
+    height: var(--stage);
+    overflow: hidden;
+    background: var(--ink-950);
+    color: var(--parchment);
+    font-family: var(--font-body);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: var(--gutter);
+    isolation: isolate;
+  }
+
+  /* ========================================================================
+     LAYERED BACKGROUND — mesh glow + grain + vignette + a near-invisible
+     layout grid. Purely decorative, purely CSS/SVG, no raster assets.
+     ======================================================================== */
+  .bg-layer{
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .bg-mesh{
+    background:
+      radial-gradient(560px 480px at 8% 6%, rgba(198,161,91,0.16), transparent 65%),
+      radial-gradient(620px 520px at 96% 100%, rgba(76,107,96,0.20), transparent 60%);
+  }
+
+  .bg-grid{
+    background-image:
+      linear-gradient(rgba(234,227,210,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(234,227,210,0.035) 1px, transparent 1px);
+    background-size: 54px 54px;
+    mask-image: radial-gradient(circle at 50% 50%, black 55%, transparent 85%);
+  }
+
+  .bg-vignette{
+    background: radial-gradient(circle at 50% 46%, transparent 45%, rgba(12,15,19,0.65) 100%);
+  }
+
+  .bg-grain{
+    width: 100%; height: 100%;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+  }
+
+  /* corner registration marks — small print-production reference ticks */
+  .corner-marks{
+    position: absolute;
+    inset: 28px;
+    z-index: 1;
+    width: calc(100% - 56px);
+    height: calc(100% - 56px);
+    pointer-events: none;
+  }
+  .corner-marks line{
+    stroke: var(--parchment-dim);
+    stroke-width: 1.25;
+    opacity: 0.4;
+  }
+
+  /* ========================================================================
+     MASTHEAD — brand + dateline, identical across all three layouts.
+     ======================================================================== */
+  .masthead{
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-bottom: 22px;
+    border-bottom: var(--rule) solid rgba(234,227,210,0.18);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--parchment);
+  }
+  .masthead__brand::before{ content: "@"; color: var(--brass); }
+  .masthead__meta{
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+    color: var(--parchment-dim);
+    text-transform: none;
+  }
+
+  /* ========================================================================
+     COMPOSITION — the content region. Layout is chosen by JS, which sets
+     [data-layout] on <body>; every rule below is scoped to that attribute
+     so the three compositions can never collide or cancel each other out.
+     ======================================================================== */
+  .composition{
+    position: relative;
+    z-index: 2;
+    overflow: hidden; /* required for the autofit scrollHeight check */
+    display: flex;
+    flex-direction: column;
+  }
+
+  .eyebrow{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 22px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--brass);
+  }
+  .eyebrow::before{
+    content: "";
+    width: 7px; height: 7px;
+    background: var(--brass);
+    transform: rotate(45deg);
+    flex: none;
+  }
+
+  .headline{
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 340;
+    color: var(--parchment);
+    letter-spacing: -0.01em;
+  }
+
+  .rule--headline{
+    height: 2px;
+    width: 64px;
+    margin-top: 30px;
+    background: var(--brass);
+  }
+
+  .dropcap{
+    float: left;
+    font-weight: 600;
+    color: var(--brass);
+    line-height: 0.82;
+    padding-right: 10px;
+    padding-top: 4px;
+  }
+
+  /* --- layout: COVER (short concept, maximal restraint) --- */
+  [data-layout="cover"] .composition{
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  [data-layout="cover"] .eyebrow{ justify-content: center; }
+  [data-layout="cover"] .headline{
+    font-size: 132px;
+    line-height: 0.98;
+    max-width: 900px;
+  }
+  [data-layout="cover"] .rule--headline{ margin-left: auto; margin-right: auto; }
+  [data-layout="cover"] .seal-wrap{ bottom: var(--gutter); left: 50%; transform: translateX(-50%); }
+
+  /* --- layout: FEATURE (medium concept, asymmetric) --- */
+  [data-layout="feature"] .composition{
+    align-items: flex-start;
+    justify-content: center;
+    text-align: left;
+  }
+  [data-layout="feature"] .headline{
+    font-size: 82px;
+    line-height: 1.04;
+    max-width: 700px;
+  }
+  [data-layout="feature"] .seal-wrap{ bottom: var(--gutter); right: var(--gutter); }
+
+  /* --- layout: DISPATCH (long concept, running column, drop cap) --- */
+  [data-layout="dispatch"] .composition{
+    align-items: flex-start;
+    justify-content: flex-start;
+    text-align: left;
+    padding-top: 8px;
+  }
+  [data-layout="dispatch"] .headline{
+    font-size: 46px;
+    font-weight: 400;
+    line-height: 1.22;
+    max-width: 780px;
+  }
+  [data-layout="dispatch"] .dropcap{ font-size: 108px; }
+  [data-layout="dispatch"] .seal-wrap{ top: 0; right: var(--gutter); width: 84px; height: 84px; }
+
+  /* ========================================================================
+     SEAL — the signature component. A concentric brass dial with the
+     brand's initial at its center; position/size vary by layout above,
+     rotation and ring style vary per-post via the seeded hash in JS.
+     ======================================================================== */
+  .seal-wrap{
+    position: absolute;
+    z-index: 2;
+    width: 118px;
+    height: 118px;
+  }
+  .seal{ width: 100%; height: 100%; overflow: visible; }
+  .seal circle{ fill: none; }
+  .seal .seal__ring-outer{ stroke: var(--brass-dim); stroke-width: 1; }
+  .seal .seal__ring-inner{ stroke: var(--brass); stroke-width: 1.25; }
+  .seal .seal__disc{ fill: var(--ink-900); stroke: var(--brass); stroke-width: 1.5; }
+  .seal .seal__tick{ stroke: var(--parchment-dim); stroke-width: 1; opacity: 0.7; }
+  .seal .seal__initial{
+    font-family: var(--font-display);
+    font-weight: 480;
+    fill: var(--parchment);
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+
+  /* ========================================================================
+     FOOTER / FOLIO
+     ======================================================================== */
+  .folio{
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-top: 20px;
+    border-top: var(--rule) solid rgba(234,227,210,0.18);
+  }
+  .folio__number{
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    color: var(--brass);
+  }
+  .folio__label{
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 11.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--parchment-dim);
+  }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage">
+
+    <!-- layered background -->
+    <div class="bg-layer bg-mesh"></div>
+    <div class="bg-layer bg-grid"></div>
+    <svg class="bg-layer bg-grain" xmlns="http://www.w3.org/2000/svg">
+      <filter id="grain">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence>
+        <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0"></feColorMatrix>
+      </filter>
+      <rect width="100%" height="100%" filter="url(#grain)"></rect>
+    </svg>
+    <div class="bg-layer bg-vignette"></div>
+
+    <svg class="corner-marks" xmlns="http://www.w3.org/2000/svg">
+      <line x1="0" y1="0" x2="18" y2="0"></line>
+      <line x1="0" y1="0" x2="0" y2="18"></line>
+      <line x1="100%" y1="0" x2="calc(100% - 18px)" y2="0"></line>
+      <line x1="100%" y1="0" x2="100%" y2="18"></line>
+      <line x1="0" y1="100%" x2="18" y2="100%"></line>
+      <line x1="0" y1="100%" x2="0" y2="calc(100% - 18px)"></line>
+      <line x1="100%" y1="100%" x2="calc(100% - 18px)" y2="100%"></line>
+      <line x1="100%" y1="100%" x2="100%" y2="calc(100% - 18px)"></line>
+    </svg>
+
+    <!-- masthead -->
+    <header class="masthead">
+      <span class="masthead__brand" id="brandHandle">{{ brand }}</span>
+      <span class="masthead__meta" id="dateline"></span>
+    </header>
+
+    <!-- composition -->
+    <main class="composition">
+      <p class="eyebrow" id="eyebrow"></p>
+      <h1 class="headline" id="headline">{{ concept }}</h1>
+      <div class="rule--headline"></div>
+    </main>
+
+    <!-- seal (signature component) -->
+    <div class="seal-wrap" id="sealWrap">
+      <svg class="seal" id="seal" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <g id="sealTicks"></g>
+        <circle class="seal__ring-outer" cx="60" cy="60" r="58"></circle>
+        <circle class="seal__disc" cx="60" cy="60" r="42"></circle>
+        <circle class="seal__ring-inner" cx="60" cy="60" r="48"></circle>
+        <text class="seal__initial" id="sealInitial" x="60" y="62" font-size="34"></text>
+      </svg>
+    </div>
+
+    <!-- folio -->
+    <footer class="folio">
+      <span class="folio__number" id="folioNumber"></span>
+      <span class="folio__label">EDITORIAL&nbsp;DISPATCH</span>
+    </footer>
+
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ----------------------------------------------------------------------
+     1. Deterministic hash — same {{ concept }} + {{ brand }} always
+        produces the same layout variety (seal style, folio number,
+        eyebrow label). Reproducible output, not random noise, so the
+        same render request is testable and diffable in the pipeline.
+     ---------------------------------------------------------------------- */
+  function hashString(str){
+    var h = 5381;
+    for (var i = 0; i < str.length; i++){
+      h = ((h << 5) + h) + str.charCodeAt(i);
+      h = h & 0xFFFFFFFF;
+    }
+    return Math.abs(h);
+  }
+
+  var headlineEl = document.getElementById('headline');
+  var brandEl    = document.getElementById('brandHandle');
+  var stage      = document.getElementById('stage');
+  var composition= document.querySelector('.composition');
+
+  var conceptText = (headlineEl.textContent || '').trim();
+  var brandText   = (brandEl.textContent || '').trim();
+  var seed = hashString(conceptText + '::' + brandText);
+
+  /* ----------------------------------------------------------------------
+     2. Layout selection — content length decides composition.
+     ---------------------------------------------------------------------- */
+  var layout;
+  if (conceptText.length <= 26) layout = 'cover';
+  else if (conceptText.length <= 90) layout = 'feature';
+  else layout = 'dispatch';
+  document.body.setAttribute('data-layout', layout);
+
+  /* ----------------------------------------------------------------------
+     3. Eyebrow label — small deterministic vocabulary, editorial voice.
+     ---------------------------------------------------------------------- */
+  var eyebrowWords = ['FIELD NOTE', 'DISPATCH', 'ON RECORD', 'PERSPECTIVE', 'BRIEFING', 'NOTE TO SELF'];
+  document.getElementById('eyebrow').textContent = eyebrowWords[seed % eyebrowWords.length];
+
+  /* ----------------------------------------------------------------------
+     4. Dateline — real date, editorial masthead formatting.
+     ---------------------------------------------------------------------- */
+  var months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  var now = new Date();
+  var dateStr = String(now.getDate()).padStart(2,'0') + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+  document.getElementById('dateline').textContent = dateStr;
+
+  /* ----------------------------------------------------------------------
+     5. Folio number — deterministic three-digit reference, editorial cue.
+     ---------------------------------------------------------------------- */
+  var folioNum = 100 + (seed % 900);
+  document.getElementById('folioNumber').textContent = 'N\u00B0 ' + folioNum;
+
+  /* ----------------------------------------------------------------------
+     6. Seal — brand initial + rotation + tick ring, built as DOM nodes
+        only (no innerHTML on user-controlled text).
+     ---------------------------------------------------------------------- */
+  var initial = brandText.replace(/^@/, '').charAt(0).toUpperCase() || '\u2022';
+  document.getElementById('sealInitial').textContent = initial;
+
+  var sealWrap = document.getElementById('sealWrap');
+  var rotation = (seed % 24) - 12; // gentle, deterministic tilt
+  sealWrap.style.transform += ' rotate(' + rotation + 'deg)';
+  if (layout === 'cover') {
+    // preserve the centering translate already set in CSS via a wrapper transform merge
+    sealWrap.style.transform = 'translateX(-50%) rotate(' + rotation + 'deg)';
+  }
+
+  var ticksGroup = document.getElementById('sealTicks');
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var tickCount = 16;
+  for (var i = 0; i < tickCount; i++){
+    var angle = (360 / tickCount) * i;
+    var line = document.createElementNS(svgNS, 'line');
+    line.setAttribute('x1', '60');
+    line.setAttribute('y1', '4');
+    line.setAttribute('x2', '60');
+    line.setAttribute('y2', '10');
+    line.setAttribute('class', 'seal__tick');
+    line.setAttribute('transform', 'rotate(' + angle + ' 60 60)');
+    ticksGroup.appendChild(line);
+  }
+
+  /* ----------------------------------------------------------------------
+     7. Drop cap — dispatch layout only. Splits the first character out
+        of the headline using DOM text-node operations (never innerHTML),
+        so arbitrary concept text can never be interpreted as markup.
+     ---------------------------------------------------------------------- */
+  if (layout === 'dispatch' && conceptText.length > 0) {
+    var first = conceptText.charAt(0);
+    var rest = conceptText.slice(1);
+    headlineEl.textContent = '';
+    var capSpan = document.createElement('span');
+    capSpan.className = 'dropcap';
+    capSpan.textContent = first;
+    headlineEl.appendChild(capSpan);
+    headlineEl.appendChild(document.createTextNode(rest));
+  }
+
+  /* ----------------------------------------------------------------------
+     8. Autofit — shrink the headline until it fits the composition box.
+        Runs after fonts are ready so metrics are accurate.
+     ---------------------------------------------------------------------- */
+  function fitHeadline(){
+    var minFontSize = 22;
+    var fontSize = parseFloat(getComputedStyle(headlineEl).fontSize);
+    var guard = 0;
+    while (
+      (headlineEl.scrollHeight > composition.clientHeight ||
+       headlineEl.scrollWidth > composition.clientWidth) &&
+      fontSize > minFontSize &&
+      guard < 200
+    ){
+      fontSize -= 2;
+      headlineEl.style.fontSize = fontSize + 'px';
+      guard++;
+    }
+  }
+
+  /* ----------------------------------------------------------------------
+     9. Ready signal — set once fonts are loaded and layout is fitted.
+        Playwright can wait on body[data-ready="true"] for a guaranteed
+        stable frame instead of relying on the generic `load` event.
+     ---------------------------------------------------------------------- */
+  function markReady(){
+    document.body.classList.add('is-ready');
+    document.body.setAttribute('data-ready', 'true');
+  }
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function(){
+      fitHeadline();
+      markReady();
+    }).catch(function(){
+      fitHeadline();
+      markReady();
+    });
+  } else {
+    fitHeadline();
+    markReady();
+  }
+})();
+</script>
+</body>
+</html>
