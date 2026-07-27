@@ -116,6 +116,9 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
+        C_MAG = '\033[35m'
+        C_RED = '\033[31m'
+        C_RST = '\033[0m'
         print("\n\n" + f"{C_MAG}╭{'─'*56}╮{C_RST}")
         print(f"{C_MAG}│{C_RST} {C_RED}🛑 AutoSocial AI Shutdown Safely{C_RST}{' '*22}{C_MAG}│{C_RST}")
         print(f"{C_MAG}╰{'─'*56}╯{C_RST}\n")
