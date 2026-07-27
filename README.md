@@ -1,6 +1,8 @@
 <div align="center">
   <h1>✨ AutoSocial AI ✨</h1>
   <p><strong>A fully autonomous, multi-LLM Instagram Orchestration Engine</strong></p>
+  <br>
+  <img src="src/autosocial/templates/preview.png" width="400" alt="AutoSocial Editorial Dispatch Preview" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
 </div>
 
 ---
