@@ -247,6 +247,7 @@ class PillowPaperNotesRenderer:
 
         # Grain effect
         noise = Image.effect_noise(self.size, 12).convert('RGBA')
+        noise.putalpha(15)
         img = Image.alpha_composite(img, noise)
 
         filename = f"{uuid.uuid4()}.jpg"
