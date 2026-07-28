@@ -20,22 +20,23 @@ AutoSocial does not rely on a single point of failure. It simultaneously interfa
 3. **Groq**
 
 If a provider hits a rate limit or goes down, the **FallbackProvider** instantly intercepts the error and seamlessly rolls over to the next available engine. This guarantees uninterrupted concept generation, caption writing, and hashtag extraction.
+Furthermore, the LLM pipeline acts as an intelligent copywriter, explicitly extracting and writing a powerful **15-word maximum quote** from its own concept to be used in graphic generation, ensuring typography is always punchy.
 
-### 🎨 Pure-Python "Editorial Dispatch" Renderer
+### 🎨 Pure-Python "Paper Notes" Renderer
 No heavy headless browsers (like Playwright or Selenium) are required. AutoSocial features a completely bespoke, pure-Python graphic design engine powered by **Pillow**:
-- **Dynamic Typography:** Automatically downloads and utilizes premium Google Fonts (`Inter`, `Fraunces`, `IBM Plex Mono`).
-- **Smart Auto-Fitting:** Intelligently scales and wraps text depending on character count, snapping into three unique layouts (`Cover`, `Feature`, `Dispatch`).
-- **Deterministic Aesthetics:** Uses a specialized hashing algorithm seeded by the text to procedurally generate unique, rotating geometric seals and dynamic layouts so the exact same text will always render the exact same graphic.
-- **Rich Visuals:** Generates complex mesh gradients and print-production registration marks via mathematics.
+- **Dynamic 4-Layout Architecture:** Intelligently scales and wraps text depending on character count and content structure, snapping into four unique layouts (`Symbol`, `Highlight`, `Statement`, or `Diagonal`).
+- **Mathematical Inline Typography:** The engine calculates text bounding boxes word-by-word to mathematically draw yellow marker highlights behind words and double red underlines exactly where emphasis is needed.
+- **Deterministic Aesthetics:** Uses a specialized hashing algorithm seeded by the text to procedurally pick paper texture colors (blush, taupe, sand, dust), SVG icons, and dynamic layouts so the exact same text will always render the exact same graphic.
+- **Procedural Shadows & Grain:** Generates complex diagonal shadow overlays and alpha-composited noise grain entirely via mathematics to simulate real paper.
 
 ### 🌐 Pollinations.ai Image Fallback
 In scenarios where custom background images are desired, AutoSocial seamlessly integrates with the unlimited, keyless **Pollinations.ai** API to generate 1080x1080 photorealistic background textures for free.
 
-### 📱 Instagrapi Publisher with Auto-Music
+### 🎵 AI Vibe-Matched Instagrapi Publisher
 The pipeline utilizes the reverse-engineered `instagrapi` library to bypass official Instagram API limitations. 
 - It automatically logs into your account.
-- It dynamically searches Instagram's audio library for appropriate background music matching the post's aesthetic.
-- It attaches the music and publishes the photo directly to the grid.
+- The AI acts as a Music Supervisor, dynamically generating a specific `music_vibe` keyword (e.g., "ethereal synth" or "chill lofi") based specifically on the tone of the generated quote.
+- It queries the Instagram Audio Library for that exact vibe, attaches the music, and publishes the photo directly to the grid.
 
 ### 🖥️ Beautiful CLI Dashboard & Safe Shutdowns
 A highly polished bash wrapper (`start_autosocial.sh`) acts as the command center. 
@@ -97,8 +98,9 @@ To launch the autonomous pipeline, simply run the command center script:
 1. **`check_providers.py`** intercepts the launch, pings OpenAI, Gemini, and Groq, and verifies which systems are currently online and within quota limits.
 2. **`run_real.py`** initializes the `BrainOrchestrator`.
 3. The orchestration engine logs into Instagram and requests an editorial concept from the primary active LLM.
-4. The concept and caption are passed to the **PillowEditorialRenderer**, which calculates the layout hash, determines the layout style (`Cover`, `Feature`, or `Dispatch`), auto-fits the typography, and renders the 1080x1080 JPEG to `/tmp/`.
-5. The `InstagrapiPublisher` takes the rendered JPEG, searches for trending audio, and pushes the final post live to your Instagram grid.
+4. The AI copywriter pipeline generates a short quote, caption, hashtags, and a specific music vibe keyword.
+5. The short quote and brand are passed to the **PillowPaperNotesRenderer**, which calculates the layout hash, selects the layout style (`Symbol`, `Highlight`, `Statement`, or `Diagonal`), draws mathematical highlights/shadows, and renders the 1080x1080 JPEG to `/tmp/`.
+6. The `InstagrapiPublisher` takes the rendered JPEG, searches the Instagram audio library for the AI-generated music vibe, and pushes the final post live to your Instagram grid.
 
 ---
 
