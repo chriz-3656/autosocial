@@ -18,7 +18,7 @@ class GroqProvider(AIProvider):
         
         payload = {"model": self.model, "messages": messages}
         
-        with httpx.Client() as client:
+        with httpx.Client(timeout=60.0) as client:
             response = client.post(self.url, headers=headers, json=payload)
             response.raise_for_status()
             return response.json()["choices"][0]["message"]["content"].strip()
@@ -32,7 +32,7 @@ class GroqProvider(AIProvider):
         
         payload = {"model": self.model, "messages": messages, "response_format": {"type": "json_object"}}
         
-        with httpx.Client() as client:
+        with httpx.Client(timeout=60.0) as client:
             response = client.post(self.url, headers=headers, json=payload)
             response.raise_for_status()
             content = response.json()["choices"][0]["message"]["content"].strip()

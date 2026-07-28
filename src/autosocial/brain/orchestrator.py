@@ -4,7 +4,7 @@ from typing import Optional
 
 from autosocial.content.pipeline import ContentPipeline
 from autosocial.queue.manager import QueueManager, QueueItem, QueueState
-from autosocial.renderers.html_renderer import HTMLRenderer
+
 from autosocial.core.interfaces.publisher import PublisherInterface
 from autosocial.models.post import PostConfig, MediaItem
 
@@ -15,7 +15,7 @@ class BrainOrchestrator:
         self,
         pipeline: ContentPipeline,
         queue: QueueManager,
-        renderer: HTMLRenderer,
+        renderer,
         publisher: PublisherInterface
     ):
         self.pipeline = pipeline

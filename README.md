@@ -102,6 +102,13 @@ To launch the autonomous pipeline, simply run the command center script:
 5. The short quote and brand are passed to the **PillowPaperNotesRenderer**, which calculates the layout hash, selects the layout style (`Symbol`, `Highlight`, `Statement`, or `Diagonal`), draws mathematical highlights/shadows, and renders the 1080x1080 JPEG to `/tmp/`.
 6. The `InstagrapiPublisher` takes the rendered JPEG, searches the Instagram audio library for the AI-generated music vibe, and pushes the final post live to your Instagram grid.
 
+### 🎨 The AI Design Generator
+If you want to generate a completely custom design from a free-text brief (e.g. "Create a dark streetwear quote post with grain and a thin border"), use the new AI Art Director mode:
+```bash
+python3 run_design.py --brief "Your creative brief here"
+```
+This triggers a strict, two-stage pipeline where the LLM constructs a precise JSON design specification, and a deterministic Python renderer handles the actual pixel generation for flawless, clipping-free output.
+
 ---
 
 ## 🏗️ Architecture Map
@@ -112,6 +119,7 @@ autosocial/
 ├── check_providers.py                 # Bootup API ping test
 ├── download_fonts.py                  # Typography fetcher for Pillow
 ├── run_real.py                        # The primary python orchestrator
+├── run_design.py                      # AI Art Director & Design Generator CLI
 │
 └── src/autosocial/
     ├── core/

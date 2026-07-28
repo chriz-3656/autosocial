@@ -85,7 +85,7 @@ class PillowPaperNotesRenderer:
             layout = 'statement'
         elif len(concept) <= 30:
             layout = 'symbol'
-        elif len(concept) <= 75:
+        elif len(concept) <= 150:
             layout = 'highlight'
         else:
             layout = 'diagonal'

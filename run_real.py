@@ -7,7 +7,7 @@ from autosocial.content.providers.gemini_provider import GeminiProvider
 from autosocial.content.providers.fallback_provider import FallbackProvider
 from autosocial.content.pipeline import ContentPipeline
 from autosocial.queue.manager import QueueManager
-from autosocial.renderers.html_renderer import HTMLRenderer
+from autosocial.renderers.pillow_paper_notes import PillowPaperNotesRenderer
 from autosocial.renderers.template_engine import TemplateEngine
 from autosocial.brain.orchestrator import BrainOrchestrator
 from autosocial.publishers.instagrapi_publisher import InstagrapiPublisher
@@ -40,7 +40,7 @@ async def main():
     provider = FallbackProvider(providers=available_providers)
     pipeline = ContentPipeline(provider)
     queue = QueueManager()
-    renderer = HTMLRenderer(output_dir="/tmp/autosocial_real")
+    renderer = PillowPaperNotesRenderer(output_dir="/tmp/autosocial_real")
     template_engine = TemplateEngine("src/autosocial/templates")
     publisher = InstagrapiPublisher()
     
@@ -95,8 +95,7 @@ async def main():
     print(f"Vibe Music Query: {item.music_vibe}")
     queue.update_state(item_id, "rendering")
     
-    from autosocial.renderers.pillow_paper_notes import PillowPaperNotesRenderer
-    
+    # We use the global PillowPaperNotesRenderer we initialized earlier or a new one
     renderer = PillowPaperNotesRenderer(output_dir="/tmp/autosocial_real")
     path = renderer.render_image(concept=item.quote, brand=settings.default_brand)
     

@@ -11,7 +11,6 @@ Requires-Dist: python-dotenv>=1.0.0
 Requires-Dist: sqlalchemy>=2.0.0
 Requires-Dist: fastapi>=0.100.0
 Requires-Dist: uvicorn>=0.23.0
-Requires-Dist: playwright>=1.35.0
 Requires-Dist: jinja2>=3.1.2
 Requires-Dist: click>=8.1.0
 Requires-Dist: apscheduler>=3.10.0
@@ -22,66 +21,129 @@ Requires-Dist: pytest-asyncio>=0.21.0; extra == "dev"
 Requires-Dist: black>=23.0; extra == "dev"
 Requires-Dist: ruff>=0.1.0; extra == "dev"
 
-# AutoSocial AI
+<div align="center">
+  <h1>✨ AutoSocial AI ✨</h1>
+  <p><strong>A fully autonomous, multi-LLM Instagram Orchestration Engine</strong></p>
+  <br>
+  <img src="src/autosocial/templates/preview.png" width="400" alt="AutoSocial Editorial Dispatch Preview" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+</div>
 
-AutoSocial AI is a lightweight, autonomous, AI-powered Instagram posting system designed for a single owner. 
-It operates as a modular monolith that researches, generates, schedules, and publishes content without human intervention.
+---
 
-## Architecture & Workflow
+AutoSocial is a state-of-the-art, fully autonomous Instagram automation pipeline. It intelligently orchestrates cutting-edge Large Language Models (LLMs) to generate compelling editorial concepts, renders stunning typography-driven graphics natively in Python, and automatically publishes them directly to your Instagram feed—complete with trending background music.
 
-The architecture is built for simplicity, resilience, and strict separation of concerns. `instagrapi` is treated purely as an external dependency hidden behind the `PublisherInterface`. Business logic components never directly invoke the unofficial Instagram API.
+Built with resilience in mind, AutoSocial never crashes due to API rate limits. Its dynamic fallback architecture guarantees 100% uptime by seamlessly hot-swapping providers on the fly.
 
-**Autonomous Workflow:**
-Research &rarr; Trend Detection &rarr; Memory Check &rarr; Generate Content &rarr; Generate Caption &rarr; Generate Hashtags &rarr; Recommend Music &rarr; Select Template &rarr; Render Graphic &rarr; Queue &rarr; Publish (via InstagrapiPublisher) &rarr; Collect Analytics &rarr; Store Memory &rarr; Optimize Future Posts
+## 🚀 Key Features
 
-## Module Structure
+### 🧠 Multi-LLM Fallback Engine
+AutoSocial does not rely on a single point of failure. It simultaneously interfaces with three distinct AI providers:
+1. **OpenAI**
+2. **Google Gemini**
+3. **Groq**
 
+If a provider hits a rate limit or goes down, the **FallbackProvider** instantly intercepts the error and seamlessly rolls over to the next available engine. This guarantees uninterrupted concept generation, caption writing, and hashtag extraction.
+Furthermore, the LLM pipeline acts as an intelligent copywriter, explicitly extracting and writing a powerful **15-word maximum quote** from its own concept to be used in graphic generation, ensuring typography is always punchy.
+
+### 🎨 Pure-Python "Paper Notes" Renderer
+No heavy headless browsers (like Playwright or Selenium) are required. AutoSocial features a completely bespoke, pure-Python graphic design engine powered by **Pillow**:
+- **Dynamic 4-Layout Architecture:** Intelligently scales and wraps text depending on character count and content structure, snapping into four unique layouts (`Symbol`, `Highlight`, `Statement`, or `Diagonal`).
+- **Mathematical Inline Typography:** The engine calculates text bounding boxes word-by-word to mathematically draw yellow marker highlights behind words and double red underlines exactly where emphasis is needed.
+- **Deterministic Aesthetics:** Uses a specialized hashing algorithm seeded by the text to procedurally pick paper texture colors (blush, taupe, sand, dust), SVG icons, and dynamic layouts so the exact same text will always render the exact same graphic.
+- **Procedural Shadows & Grain:** Generates complex diagonal shadow overlays and alpha-composited noise grain entirely via mathematics to simulate real paper.
+
+### 🌐 Pollinations.ai Image Fallback
+In scenarios where custom background images are desired, AutoSocial seamlessly integrates with the unlimited, keyless **Pollinations.ai** API to generate 1080x1080 photorealistic background textures for free.
+
+### 🎵 AI Vibe-Matched Instagrapi Publisher
+The pipeline utilizes the reverse-engineered `instagrapi` library to bypass official Instagram API limitations. 
+- It automatically logs into your account.
+- The AI acts as a Music Supervisor, dynamically generating a specific `music_vibe` keyword (e.g., "ethereal synth" or "chill lofi") based specifically on the tone of the generated quote.
+- It queries the Instagram Audio Library for that exact vibe, attaches the music, and publishes the photo directly to the grid.
+
+### 🖥️ Beautiful CLI Dashboard & Safe Shutdowns
+A highly polished bash wrapper (`start_autosocial.sh`) acts as the command center. 
+- Features custom truecolor Instagram-gradient ASCII art.
+- Provides real-time orchestration tracking via color-coded log boxes.
+- Implements **Graceful Shutdowns:** Hitting `Ctrl+C` instantly traps the `KeyboardInterrupt`, halts all pipelines safely, and cleanly exits with a styled termination banner instead of a raw stack trace.
+
+---
+
+## 🛠️ Installation
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/chriz-3656/autosocial.git
+cd autosocial
 ```
+
+### 2. Install Dependencies
+Ensure you are using Python 3.10+ and install the required packages:
+```bash
+pip install -e .
+```
+*(Dependencies include `instagrapi`, `pillow`, `google-genai`, `openai`, `groq`, `pydantic`, etc.)*
+
+### 3. Initialize the Design Engine
+Run the included downloader script to fetch the required premium typography into the local cache for the Pillow engine:
+```bash
+python download_fonts.py
+```
+
+### 4. Environment Configuration
+Duplicate the example environment file:
+```bash
+cp .env.example .env
+```
+Fill in your API keys and Instagram credentials. Due to the fallback engine, you only *need* one valid LLM key, but providing all three guarantees maximum resilience.
+```env
+# AI Providers
+OPENAI_API_KEY=your_key_here
+GEMINI_API_KEY=your_key_here
+GROQ_API_KEY=your_key_here
+
+# Instagram Account
+INSTAGRAM_USERNAME=your_username
+INSTAGRAM_PASSWORD=your_password
+```
+
+---
+
+## ⚙️ Usage
+
+To launch the autonomous pipeline, simply run the command center script:
+
+```bash
+./start_autosocial.sh
+```
+
+### What happens when you run this?
+1. **`check_providers.py`** intercepts the launch, pings OpenAI, Gemini, and Groq, and verifies which systems are currently online and within quota limits.
+2. **`run_real.py`** initializes the `BrainOrchestrator`.
+3. The orchestration engine logs into Instagram and requests an editorial concept from the primary active LLM.
+4. The AI copywriter pipeline generates a short quote, caption, hashtags, and a specific music vibe keyword.
+5. The short quote and brand are passed to the **PillowPaperNotesRenderer**, which calculates the layout hash, selects the layout style (`Symbol`, `Highlight`, `Statement`, or `Diagonal`), draws mathematical highlights/shadows, and renders the 1080x1080 JPEG to `/tmp/`.
+6. The `InstagrapiPublisher` takes the rendered JPEG, searches the Instagram audio library for the AI-generated music vibe, and pushes the final post live to your Instagram grid.
+
+---
+
+## 🏗️ Architecture Map
+
+```text
 autosocial/
-├── src/autosocial/
-│   ├── analytics/        # Collects and stores post performance metrics
-│   ├── brain/            # Main orchestrator / state machine for the workflow
-│   ├── cleanup/          # Garbage collection for temporary rendered files/caches
-│   ├── content/          # Generators for Content, Captions, Hashtags, and Music
-│   ├── core/             # Configuration, Interfaces (e.g., PublisherInterface), Exceptions
-│   ├── dashboard/        # Lightweight UI for monitoring queue, calendar, and analytics
-│   ├── memory/           # Memory Engine to track past content and avoid duplicates
-│   ├── models/           # Shared Pydantic data models
-│   ├── publishers/       # Implementations of PublisherInterface (InstagrapiPublisher)
-│   ├── queue/            # Queue manager (Pending, Rendering, Publishing, Published, Failed, Retry)
-│   ├── renderers/        # HTML/CSS/Playwright engine for generating graphics from templates
-│   ├── research/         # Information gathering from RSS, blogs, and defined sources
-│   ├── scheduler/        # Task scheduling and posting window logic
-│   ├── trends/           # Trend detection and ranking
-│   └── utils/            # Logging and shared utilities
+├── start_autosocial.sh                # Main CLI dashboard
+├── check_providers.py                 # Bootup API ping test
+├── download_fonts.py                  # Typography fetcher for Pillow
+├── run_real.py                        # The primary python orchestrator
+│
+└── src/autosocial/
+    ├── core/
+    │   └── config.py                  # Pydantic Settings & Env manager
+    ├── providers/
+    │   └── fallback_provider.py       # Multi-LLM switching logic
+    ├── renderers/
+    │   ├── pillow_editorial.py        # Advanced Python Graphic Engine
+    │   └── pollinations_renderer.py   # Free AI image fallback generator
+    └── publishers/
+        └── instagrapi_publisher.py    # Auto-upload & Music logic
 ```
-
-## Dependency Graph
-
-```mermaid
-graph TD
-    Scheduler --> Brain
-    Brain --> ResearchEngine
-    Brain --> TrendDetection
-    Brain --> MemoryEngine
-    Brain --> ContentGenerator
-    ContentGenerator --> CaptionGenerator
-    ContentGenerator --> HashtagGenerator
-    ContentGenerator --> MusicRecommendation
-    Brain --> HTMLRenderer
-    HTMLRenderer --> QueueManager
-    QueueManager --> InstagrapiPublisher
-    InstagrapiPublisher --> Instagrapi[instagrapi (Third Party)]
-    InstagrapiPublisher --> AnalyticsCollector
-    AnalyticsCollector --> MemoryEngine
-    QueueManager --> CleanupService
-```
-
-## Implementation Plan for Next Phase (Phase 3)
-
-1. **Memory & Content Generation**: Implement the `MemoryEngine` (SQLite/JSON store) and `ContentGenerator` utilizing a chosen LLM to create unique concepts.
-2. **HTML Renderer Core**: Build the baseline Playwright automation in `renderers` that takes an HTML/CSS template and outputs a `.png` or `.mp4`.
-3. **Queue Manager & Scheduler Skeleton**: Wire up a lightweight SQLite or Redis-based queue to transition posts between states (Pending &rarr; Rendering &rarr; Publishing &rarr; Published).
-4. **Brain Orchestrator**: Connect the pipeline from Research to the Queue.
-
-*Note: Enterprise features like RBAC, Multi-tenancy, and complex microservices have been strictly removed.*
