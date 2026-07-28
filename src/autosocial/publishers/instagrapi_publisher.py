@@ -63,12 +63,11 @@ class InstagrapiPublisher(PublisherInterface):
                 item = config.media[0]
                 if item.media_type == "photo":
                     try:
-                        import random
-                        queries = ["lofi", "chill", "acoustic", "pop", "focus"]
-                        tracks = self.client.search_music(random.choice(queries))
+                        music_query = config.music_query if config.music_query else "lofi"
+                        tracks = self.client.search_music(music_query)
                         if tracks:
                             track = tracks[0]
-                            logger.info(f"Auto-adding song: {track.title} by {track.display_artist}")
+                            logger.info(f"Auto-adding vibe matched song ({music_query}): {track.title} by {track.display_artist}")
                             media = self.client.photo_upload_with_music(item.path, config.caption, track=track)
                         else:
                             media = self.client.photo_upload(item.path, config.caption)

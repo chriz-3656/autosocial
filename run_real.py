@@ -73,6 +73,12 @@ async def main():
     for line in item.concept.split('\n'):
         print(f"{C_MAG}│{C_RST} {C_DIM}{line}{C_RST}")
     print(f"{C_MAG}╰────────────────────────────────────────────────────────╯{C_RST}")
+    
+    print(f"\n{C_MAG}╭────────────────────────────────────────────────────────╮{C_RST}")
+    print(f"{C_MAG}│{C_RST} {C_YEL}✍️ SHORT QUOTE (For Image Rendering){C_RST}                   {C_MAG}│{C_RST}")
+    print(f"{C_MAG}├────────────────────────────────────────────────────────┤{C_RST}")
+    print(f"{C_MAG}│{C_RST} {C_DIM}{item.quote}{C_RST}")
+    print(f"{C_MAG}╰────────────────────────────────────────────────────────╯{C_RST}")
 
     print(f"\n{C_CYAN}╭────────────────────────────────────────────────────────╮{C_RST}")
     print(f"{C_CYAN}│{C_RST} {C_YEL}📝 INSTAGRAM CAPTION{C_RST}                                   {C_CYAN}│{C_RST}")
@@ -86,12 +92,13 @@ async def main():
     
     # 3. Render High-End AI Image using the Pure-Python Pillow Editorial Engine
     print("Generating Image using Pillow Editorial Engine...")
+    print(f"Vibe Music Query: {item.music_vibe}")
     queue.update_state(item_id, "rendering")
     
     from autosocial.renderers.pillow_editorial import PillowEditorialRenderer
     
     renderer = PillowEditorialRenderer(output_dir="/tmp/autosocial_real")
-    path = renderer.render_image(concept=item.concept, brand=settings.default_brand)
+    path = renderer.render_image(concept=item.quote, brand=settings.default_brand)
     
     if not path:
         print("Rendering failed.")

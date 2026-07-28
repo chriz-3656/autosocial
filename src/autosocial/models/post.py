@@ -12,6 +12,7 @@ class PostConfig(BaseModel):
     caption: str = Field(default="", description="Caption for the post")
     media: List[MediaItem] = Field(description="List of media items for the post")
     location_name: Optional[str] = Field(default=None, description="Optional location to tag")
+    music_query: Optional[str] = Field(default=None, description="Music genre or keyword to search for")
     
 class StoryConfig(BaseModel):
     media: MediaItem

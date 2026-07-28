@@ -15,8 +15,10 @@ class QueueItem(BaseModel):
     id: str
     state: QueueState
     concept: str
+    quote: str
     caption: str
     hashtags: List[str]
+    music_vibe: str
     media_path: Optional[str] = None
     error: Optional[str] = None
 

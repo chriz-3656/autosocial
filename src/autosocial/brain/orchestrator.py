@@ -26,6 +26,8 @@ class BrainOrchestrator:
     async def create_and_queue_post(self, category: str, memory_topics: list) -> str:
         """Step 1: Generate Content and Queue it"""
         concept = self.pipeline.generate_concept(category, memory_topics)
+        quote = self.pipeline.generate_quote(concept)
+        music_vibe = self.pipeline.generate_music_vibe(quote)
         caption = self.pipeline.generate_caption(concept, "witty")
         hashtags = self.pipeline.generate_hashtags(concept)
         
@@ -34,8 +36,10 @@ class BrainOrchestrator:
             id=item_id,
             state=QueueState.PENDING,
             concept=concept,
+            quote=quote,
             caption=caption,
-            hashtags=hashtags
+            hashtags=hashtags,
+            music_vibe=music_vibe
         )
         self.queue.add_item(item)
         logger.info(f"Queued post {item_id}")
@@ -63,7 +67,8 @@ class BrainOrchestrator:
             full_caption = f"{item.caption}\n\n{' '.join(item.hashtags)}"
             config = PostConfig(
                 caption=full_caption,
-                media=[MediaItem(path=item.media_path, media_type="photo")]
+                media=[MediaItem(path=item.media_path, media_type="photo")],
+                music_query=item.music_vibe
             )
             
             result = self.publisher.publish_post(config)
