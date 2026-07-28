@@ -95,9 +95,9 @@ async def main():
     print(f"Vibe Music Query: {item.music_vibe}")
     queue.update_state(item_id, "rendering")
     
-    from autosocial.renderers.pillow_editorial import PillowEditorialRenderer
+    from autosocial.renderers.pillow_paper_notes import PillowPaperNotesRenderer
     
-    renderer = PillowEditorialRenderer(output_dir="/tmp/autosocial_real")
+    renderer = PillowPaperNotesRenderer(output_dir="/tmp/autosocial_real")
     path = renderer.render_image(concept=item.quote, brand=settings.default_brand)
     
     if not path:
